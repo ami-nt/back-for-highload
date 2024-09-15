@@ -1,0 +1,7 @@
+<h1>Create a new post</h1>
+<form method="pots">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
+    

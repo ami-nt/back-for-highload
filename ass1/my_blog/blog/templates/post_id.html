@@ -1,0 +1,36 @@
+<h1>Post Detail</h1>
+<h1>{{ post.title }}</h1>
+<p>Author: {{ post.author }}</p>
+<p>{{ post.content }}</p>
+<p>Created on: {{ post.created_at }}</p>
+
+<a href="{% url 'post_edit' post.id %}">
+    <button type="button">Edit Post</button>
+</a>
+
+<a href="{% url 'delete' post.id %}">
+    <button type="button">Delete Post</button>
+</a>
+
+
+<h2>Comments</h2>
+
+{% if comments %}
+    <ul>
+        {% for comment in comments %}
+            <li>
+                <strong>{{ comment.author.username }}</strong> on {{ comment.created_at }}<br>
+                {{ comment.text }}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No comments yet.</p>
+{% endif %}
+
+<h3>Leave a comment</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit Comment</button>
+</form>
