@@ -20,14 +20,21 @@ def post_list(request):
     
     
 def post_detail(request, id):
-    try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
-        raise Http404("No post")
-    
+    post = get_object_or_404(Post, id=id)
     comments = Comment.objects.filter(post=post).order_by('-created_at')
-    form = CommentForm()
-    return render(request, 'post_detail.html', {'post': post, 'comments': comments, 'form': form})
+
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post 
+            comment.author = request.user  
+            comment.save()  
+            return redirect('post_by_id', id=post.id)  
+    else:
+        form = CommentForm()
+        
+    return render(request, 'post_id.html', {'post': post, 'comments': comments, 'form': form})
     
     
 def create_post(request):
@@ -36,7 +43,7 @@ def create_post(request):
         post = form.save(commit=False) 
         post.author = request.user  
         post.save()  
-        return HttpResponseRedirect("/posts/")
+        return HttpResponseRedirect("/blog/posts/")
     return render(request, 'form.html', {'form': form})
 
           
@@ -58,7 +65,7 @@ class PostEditView(View):
         form = PostForm(request.POST,instance=post)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect("/posts/")
+            return HttpResponseRedirect("/blog/posts/")
         return render(request, 'edit.html', {'form': form, 'post': post})
 
     
@@ -76,7 +83,7 @@ class PostDelView(View):
         if post.author != request.user.username:
             return HttpResponse("Unauthorized")
         post.delete()
-        return HttpResponseRedirect("/posts/")
+        return HttpResponseRedirect("/blog/posts/")
 
     
 class RegisterView(View):
@@ -89,8 +96,11 @@ class RegisterView(View):
         form = RegisterForm(request.POST)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect("/login/")
+            return HttpResponseRedirect("/blog/login/")
+        else:
+            print(form.errors)  
         return render(request, 'register.html', {'form': form})
+
    
     
 class LoginView(View):
@@ -107,7 +117,7 @@ class LoginView(View):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-                    return HttpResponseRedirect("/posts/")
+                    return HttpResponseRedirect("/blog/posts/")
                 else:
                     return HttpResponse('Disabled account')
             else:
